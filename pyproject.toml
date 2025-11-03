@@ -19,7 +19,9 @@ dependencies = [
 	"torchvision>=0.22",
 	"opencv-python>=4.10",
 	"matplotlib>=3.10",
-	"open-clip-torch>=3.2"
+	"open-clip-torch>=3.2",
+	"viztools>=0.4.3",
+	"scikit-learn>=1.7"
 ]
 
 [project.optional-dependencies]

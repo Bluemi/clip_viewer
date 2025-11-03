@@ -104,13 +104,14 @@ class MobileModel(BaseEmbeddingModel):
         return TracedBackend(image_model, text_model), preprocess, tokenizer
 
     def encode_image(self, images: ImagesType, normalize: bool = False):
-        pil_images = MobileModel._convert_to_pil_list(images)
-        preprocessed_images = torch.stack([self._preprocess(i) for i in pil_images])
-        features = self.model.encode_image(preprocessed_images)
-        if normalize:
-            features /= features.norm(dim=-1, keepdim=True)
-        if MobileModel._is_single_image(images):
-            features = features.squeeze(0)
+        with torch.no_grad():
+            pil_images = MobileModel._convert_to_pil_list(images)
+            preprocessed_images = torch.stack([self._preprocess(i) for i in pil_images])
+            features = self.model.encode_image(preprocessed_images)
+            if normalize:
+                features /= features.norm(dim=-1, keepdim=True)
+            if MobileModel._is_single_image(images):
+                features = features.squeeze(0)
         return features
 
     @staticmethod
