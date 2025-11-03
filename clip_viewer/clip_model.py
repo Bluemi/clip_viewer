@@ -159,22 +159,23 @@ class MobileModel(BaseEmbeddingModel):
             return isinstance(images, Image.Image)
 
     def encode_text(self, texts: Union[List[str], str], normalize: bool = False):
-        single_instance = False
-        if isinstance(texts, str):
-            texts = [texts]
-            single_instance = True
-        elif not isinstance(texts, list) and all(isinstance(t, str) for t in texts):
-            raise TypeError(f"Unsupported input type \"{type(texts)}\". Expected list of strings or string.")
+        with torch.no_grad():
+            single_instance = False
+            if isinstance(texts, str):
+                texts = [texts]
+                single_instance = True
+            elif not isinstance(texts, list) and all(isinstance(t, str) for t in texts):
+                raise TypeError(f"Unsupported input type \"{type(texts)}\". Expected list of strings or string.")
 
-        tokens = self.tokenizer(texts)
-        features = self.model.encode_text(tokens)
+            tokens = self.tokenizer(texts)
+            features = self.model.encode_text(tokens)
 
-        if normalize:
-            features /= features.norm(dim=-1, keepdim=True)
+            if normalize:
+                features /= features.norm(dim=-1, keepdim=True)
 
-        if single_instance:
-            features = features.squeeze(0)
-        return features
+            if single_instance:
+                features = features.squeeze(0)
+            return features
 
 
 class TracedBackend:

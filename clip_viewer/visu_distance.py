@@ -10,7 +10,9 @@ from tqdm import tqdm
 
 from clip_viewer.clip_model import MobileModel
 from clip_viewer.data import get_video_paths, VideoFrames
-from clip_viewer.viewer import LineViewer
+from clip_viewer.distance_viewer import DistanceViewer
+
+QUERY = 'fish'
 
 
 def get_args():
@@ -36,9 +38,13 @@ def analyse_videos(model: MobileModel, paths: List[Path]):
         embeddings.append(emb)
         frames.extend(frms)
     embeddings = np.concatenate(embeddings, axis=0)
-    embeddings_2d = create_2d_embeddings(embeddings)
 
-    viewer = LineViewer(embeddings_2d, frames)
+    text_embedding = model.encode_text(QUERY, normalize=True).cpu().numpy()
+
+    distances = np.dot(embeddings, text_embedding)
+    # distances = np.linalg.norm(embeddings - text_embedding, axis=1)
+
+    viewer = DistanceViewer(distances, frames)
     viewer.run()
 
 
@@ -46,7 +52,7 @@ def embed_video(model: MobileModel, path: Path):
     frames = list(VideoFrames(path, verbose=False))
     embeddings = []
     for batch in tqdm(batched(tqdm(frames), 16)):
-        embs = model.encode_image(list(batch)).cpu().numpy()
+        embs = model.encode_image(list(batch), normalize=True).cpu().numpy()
         embeddings.extend(embs)
     return np.array(embeddings), frames
 
