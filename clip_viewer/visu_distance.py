@@ -12,7 +12,7 @@ from clip_viewer.clip_model import MobileModel
 from clip_viewer.data import get_video_paths, VideoFrames
 from clip_viewer.distance_viewer import DistanceViewer
 
-QUERY = 'fish'
+QUERIES = ['fish', 'a fish', 'fish fin', 'a bottle']
 
 
 def get_args():
@@ -39,12 +39,13 @@ def analyse_videos(model: MobileModel, paths: List[Path]):
         frames.extend(frms)
     embeddings = np.concatenate(embeddings, axis=0)
 
-    text_embedding = model.encode_text(QUERY, normalize=True).cpu().numpy()
+    text_embedding = model.encode_text(QUERIES, normalize=True).cpu().numpy()
 
-    distances = np.dot(embeddings, text_embedding)
+    distances = np.dot(embeddings, text_embedding.T)
+    print(distances.shape)
     # distances = np.linalg.norm(embeddings - text_embedding, axis=1)
 
-    viewer = DistanceViewer(distances, frames)
+    viewer = DistanceViewer(distances, frames, QUERIES)
     viewer.run()
 
 
