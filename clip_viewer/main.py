@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
+from itertools import batched
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from sklearn.manifold import TSNE
@@ -23,8 +25,23 @@ def main():
     model = MobileModel()
 
     video_paths = get_video_paths(args.input_file)
-    for path in video_paths:
-        analyze_video(model, path)
+    analyse_videos(model, video_paths)
+    # for path in video_paths:
+    #     analyze_video(model, path)
+
+
+def analyse_videos(model: MobileModel, paths: List[Path]):
+    embeddings = []
+    frames = []
+    for path in paths:
+        emb, frms = embed_video(model, path)
+        embeddings.append(emb)
+        frames.extend(frms)
+    embeddings = np.concatenate(embeddings, axis=0)
+    embeddings_2d = create_2d_embeddings(embeddings)
+
+    viewer = LineViewer(embeddings_2d, frames)
+    viewer.run()
 
 
 def analyze_video(model: MobileModel, path: Path):
@@ -37,7 +54,10 @@ def analyze_video(model: MobileModel, path: Path):
 
 def embed_video(model: MobileModel, path: Path):
     frames = list(VideoFrames(path, verbose=False))
-    embeddings = [model.encode_image(frame).numpy() for frame in tqdm(frames)]
+    embeddings = []
+    for batch in tqdm(batched(tqdm(frames), 16)):
+        embs = model.encode_image(list(batch)).cpu().numpy()
+        embeddings.extend(embs)
     return np.array(embeddings), frames
 
 

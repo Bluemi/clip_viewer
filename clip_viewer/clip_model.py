@@ -84,10 +84,11 @@ class MobileModel(BaseEmbeddingModel):
     @staticmethod
     def _load_traced_model(fp16_image: bool = False):
         model_name = "MobileCLIP-S2"
+        device = torch.device('cpu') if not torch.cuda.is_available() else "cuda"
         if fp16_image:
-            image_model = torch.jit.load("models/traced_image_encoder_fp16.pt")
+            image_model = torch.jit.load("models/traced_image_encoder_fp16.pt", map_location=device)
         else:
-            image_model = torch.jit.load("models/traced_image_encoder.pt")
+            image_model = torch.jit.load("models/traced_image_encoder.pt", map_location=device)
         text_model = torch.jit.load("models/traced_text_encoder.pt")
         tokenizer = open_clip.get_tokenizer(model_name)
 
@@ -101,7 +102,8 @@ class MobileModel(BaseEmbeddingModel):
             steps.append(transforms.ConvertImageDtype(torch.float16))
 
         preprocess = transforms.Compose(steps)
-        return TracedBackend(image_model, text_model), preprocess, tokenizer
+
+        return TracedBackend(image_model, text_model, device), preprocess, tokenizer
 
     def encode_image(self, images: ImagesType, normalize: bool = False):
         with torch.no_grad():
@@ -176,18 +178,19 @@ class MobileModel(BaseEmbeddingModel):
 
 
 class TracedBackend:
-    def __init__(self, image_model: torch.ScriptModule, text_model: torch.ScriptModule):
+    def __init__(self, image_model: torch.ScriptModule, text_model: torch.ScriptModule, device: torch.device):
         self.image_model = image_model
         self.text_model = text_model
+        self.device = device
 
     def encode_image(self, images: torch.Tensor):
+        images = images.to(self.device)
         # noinspection PyCallingNonCallable
         return self.image_model(images)
 
     def encode_text(self, tokens: torch.LongTensor) -> torch.Tensor:
         # noinspection PyCallingNonCallable
         return self.text_model(tokens)
-
 
 
 def reparameterize_model(model: torch.nn.Module):
