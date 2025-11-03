@@ -24,7 +24,7 @@ def get_args():
 def main():
     args = get_args()
 
-    model = MobileModel()
+    model = MobileModel(traced=False, load_mcip=False)
 
     video_paths = get_video_paths(args.input_file)
     analyse_videos(model, video_paths)

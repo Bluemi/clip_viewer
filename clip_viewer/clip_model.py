@@ -52,9 +52,9 @@ class BaseEmbeddingModel:
 class MobileModel(BaseEmbeddingModel):
     def __init__(self, traced: bool = True, load_mcip: bool = True):
         if traced:
-            self.model, self._preprocess, self.tokenizer = MobileModel._load_traced_model()
+            self.model, self._preprocess, self.tokenizer, self.device = MobileModel._load_traced_model()
         else:
-            self.model, self._preprocess, self.tokenizer = MobileModel._load_mobile_model(load_mcip)
+            self.model, self._preprocess, self.tokenizer, self.device = MobileModel._load_mobile_model(load_mcip)
 
     @staticmethod
     def _load_mobile_model(load_mcip: bool):
@@ -79,7 +79,11 @@ class MobileModel(BaseEmbeddingModel):
         model.text.eval()
         model.visual.eval()
 
-        return model, preprocess, tokenizer
+        device = torch.device('cpu') if not torch.cuda.is_available() else torch.device("cuda")
+
+        model = model.to(device)
+
+        return model, preprocess, tokenizer, device
 
     @staticmethod
     def _load_traced_model(fp16_image: bool = False):
@@ -103,17 +107,19 @@ class MobileModel(BaseEmbeddingModel):
 
         preprocess = transforms.Compose(steps)
 
-        return TracedBackend(image_model, text_model, device), preprocess, tokenizer
+        return TracedBackend(image_model, text_model, device), preprocess, tokenizer, device
 
     def encode_image(self, images: ImagesType, normalize: bool = False):
         with torch.no_grad():
             pil_images = MobileModel._convert_to_pil_list(images)
             preprocessed_images = torch.stack([self._preprocess(i) for i in pil_images])
+            preprocessed_images = preprocessed_images.to(self.device)
             features = self.model.encode_image(preprocessed_images)
             if normalize:
                 features /= features.norm(dim=-1, keepdim=True)
             if MobileModel._is_single_image(images):
                 features = features.squeeze(0)
+            features = features.cpu()
         return features
 
     @staticmethod
@@ -168,6 +174,7 @@ class MobileModel(BaseEmbeddingModel):
                 raise TypeError(f"Unsupported input type \"{type(texts)}\". Expected list of strings or string.")
 
             tokens = self.tokenizer(texts)
+            tokens = tokens.to(self.device)
             features = self.model.encode_text(tokens)
 
             if normalize:
@@ -175,7 +182,7 @@ class MobileModel(BaseEmbeddingModel):
 
             if single_instance:
                 features = features.squeeze(0)
-            return features
+            return features.cpu()
 
 
 class TracedBackend:
