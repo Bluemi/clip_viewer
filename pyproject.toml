@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clip_viewer"
+version = "0.1.0"
+description = "Classify fish."
+authors = [
+    { name="Bruno Schilling", email="bruno.schilling@protonmail.ch" }
+]
+license = { text = "apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+	"pillow>=8.0",
+	"numpy>=2.0",
+	"torch>=2.9",
+	"torchvision>=0.22",
+	"opencv-python>=4.10",
+	"matplotlib>=3.10",
+	"open-clip-torch>=3.2"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["."]
