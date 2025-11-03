@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.manifold import TSNE
+from tqdm import tqdm
 
 from clip_viewer.clip_model import MobileModel
 from clip_viewer.data import get_video_paths, VideoFrames
@@ -27,16 +28,17 @@ def main():
 
 
 def analyze_video(model: MobileModel, path: Path):
-    embeddings = embed_video(model, path)
+    embeddings, frames = embed_video(model, path)
     embeddings_2d = create_2d_embeddings(embeddings)
 
-    viewer = LineViewer(embeddings_2d)
+    viewer = LineViewer(embeddings_2d, frames)
     viewer.run()
 
 
 def embed_video(model: MobileModel, path: Path):
-    embeddings = [model.encode_image(frame).numpy() for frame in VideoFrames(path, verbose=True)]
-    return np.array(embeddings)
+    frames = list(VideoFrames(path, verbose=False))
+    embeddings = [model.encode_image(frame).numpy() for frame in tqdm(frames)]
+    return np.array(embeddings), frames
 
 
 def create_2d_embeddings(embeddings: np.ndarray) -> np.ndarray:
