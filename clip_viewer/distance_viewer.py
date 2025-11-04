@@ -11,7 +11,7 @@ from viztools.viewer import Viewer
 COLORS = [
     np.array([255, 0, 0, 50]),
     np.array([0, 255, 0, 50]),
-    np.array([0, 0, 255, 50]),
+    np.array([80, 80, 255, 50]),
     np.array([255, 255, 0, 50]),
     np.array([255, 0, 255, 50]),
     np.array([0, 255, 255, 50]),

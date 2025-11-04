@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.manifold import TSNE
 from tqdm import tqdm
 
-from clip_viewer.clip_model import MobileModel
+from clip_viewer.models import SiglipModel, BaseEmbeddingModel
 from clip_viewer.data import get_video_paths, VideoFrames
 from clip_viewer.distance_viewer import DistanceViewer
 
@@ -24,13 +24,14 @@ def get_args():
 def main():
     args = get_args()
 
-    model = MobileModel(traced=False, load_mcip=False)
+    # model = MobileModel(traced=False, load_mcip=False)
+    model = SiglipModel.load(True)
 
     video_paths = get_video_paths(args.input_file)
     analyse_videos(model, video_paths)
 
 
-def analyse_videos(model: MobileModel, paths: List[Path]):
+def analyse_videos(model: BaseEmbeddingModel, paths: List[Path]):
     embeddings = []
     frames = []
     for path in paths:
@@ -49,7 +50,7 @@ def analyse_videos(model: MobileModel, paths: List[Path]):
     viewer.run()
 
 
-def embed_video(model: MobileModel, path: Path):
+def embed_video(model: BaseEmbeddingModel, path: Path):
     frames = list(VideoFrames(path, verbose=False))
     embeddings = []
     for batch in tqdm(batched(tqdm(frames), 16)):

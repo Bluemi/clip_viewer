@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.manifold import TSNE
 from tqdm import tqdm
 
-from clip_viewer.clip_model import MobileModel
+from clip_viewer.models.clip_model import MobileModel
 from clip_viewer.data import get_video_paths, VideoFrames
 from clip_viewer.viewer import LineViewer
 

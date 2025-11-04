@@ -21,7 +21,9 @@ dependencies = [
 	"matplotlib>=3.10",
 	"open-clip-torch>=3.2",
 	"viztools>=0.5.2",
-	"scikit-learn>=1.7"
+	"scikit-learn>=1.7",
+	"transformers>=4.57",
+	"accelerate>=1.11"
 ]
 
 [project.optional-dependencies]
