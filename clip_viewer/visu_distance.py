@@ -43,8 +43,6 @@ def analyse_videos(model: BaseEmbeddingModel, paths: List[Path]):
     text_embedding = model.encode_text(QUERIES, normalize=True).cpu().numpy()
 
     distances = np.dot(embeddings, text_embedding.T)
-    print(distances.shape)
-    # distances = np.linalg.norm(embeddings - text_embedding, axis=1)
 
     viewer = DistanceViewer(distances, frames, QUERIES)
     viewer.run()
@@ -56,7 +54,7 @@ def embed_video(model: BaseEmbeddingModel, path: Path):
     for batch in tqdm(batched(tqdm(frames), 16)):
         embs = model.encode_image(list(batch), normalize=True).cpu().numpy()
         embeddings.extend(embs)
-    return np.array(embeddings), frames
+    return embeddings, frames
 
 
 def create_2d_embeddings(embeddings: np.ndarray) -> np.ndarray:
